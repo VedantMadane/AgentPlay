@@ -12,7 +12,7 @@
   <a href="README.md">English</a> ·
   <a href="https://wg5759.github.io/AgentPlay/">项目官网</a> ·
   <a href="docs/assets/promo/agentplay-demo.mp4">45 秒演示</a> ·
-  <a href="https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.3">下载预览版</a> ·
+  <a href="https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.4">下载预览版</a> ·
   <a href="docs/QUICK_START.md">5 分钟上手</a> ·
   <a href="https://github.com/wg5759/AgentPlay/discussions">交流与问答</a> ·
   <a href="CONTRIBUTING.md">参与贡献</a>
@@ -34,9 +34,9 @@ AgentPlay 是一个面向 AI 时代的本地媒体工作台：在可靠播放的
 
 ## 下载
 
-公开稳定版仍是 `0.7.6`；最新测试通道为 [0.9.1 Preview 3](https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.3)，这是未经签名、带完整校验资产的 GitHub Prerelease。
+公开稳定版仍是 `0.7.6`；最新测试通道为 [0.9.1 Preview 4](https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.4)，这是未经签名、带完整校验资产的 GitHub Prerelease。
 
-Preview 3 将本地音视频统一留在原播放区域，播放前检查画面与音轨；必要时自动准备本地兼容缓存，原文件保持不变。首次准备可能需要等待；全屏与 ESC 切换不再重新创建播放器。
+Preview 4 将本地音视频统一留在原播放区域，播放前检查画面与音轨；必要时自动准备本地兼容缓存，原文件保持不变。首次准备可能需要等待；全屏与 ESC 切换不再重新创建播放器。 本次还补齐直接片段/字幕编辑、任务恢复与模型能力检测；首次准备的已知限制见发布页。
 
 - [AgentPlay 0.7.6 发布页](https://github.com/wg5759/AgentPlay/releases/tag/v0.7.6)
 - [Windows x64 标准版](https://github.com/wg5759/AgentPlay/releases/download/v0.7.6/AgentPlay-0.7.6-Windows-x64-Standard.exe)：不内置模型，SHA-256 `B6680A6AE570268D4BA81D5E74CC3DE2D626063FBADCF7387467606F7F63E8CF`

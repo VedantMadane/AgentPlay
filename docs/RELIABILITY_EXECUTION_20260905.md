@@ -2,6 +2,17 @@
 
 用户于2026-09-05批准执行PROJECT_REVIEW_20260905.md的有限三轮建议。不重开0.9.0/0.9.1规划，不新增功能大类。
 
+## 当前决定与后续顺序（2026-09-05）
+
+用户最新明确“不用做三模型会审，你直接先安排后续的工作”。取消固定三模型会审门槛，由当前Codex继续，不再为同一授权重复索权。旧Claude超时仅保留历史，不再作为阻塞；真实测试、备份、安装态与公开字节核验仍保留。
+
+1. [ ] 整理交付基线：按依赖处理PR44/45，核对合入后的源码/CI；修正本机12个月总方案与公开旧方案的漂移，避免重新开一份计划。
+2. [x] 同步桌面：同一标准安装器已覆盖原路径，386项旧文件备份校验；安装态窗口/字幕/剪辑/问答/恢复通过，14格式矩阵通过条件与首次准备超时缺口详见[Preview4回执](RELEASE_0.9.1_PREVIEW4.md)。
+3. [ ] 公开交付：完成未签名Preview4的安装器/便携包、SBOM和校验资产；公开后匿名下载核哈希，统一README、官网、快速入门和发给朋友的下载入口，不覆盖旧版回滚资产。
+4. [ ] 恢复有限推广：沿用已有每日计划，每天一个安全事项，先官网搜索基础与视频转AI蓝图用例，再按真实试用反馈修复。真人试用不得代填，不增加新功能大类、不新增重复自动化。
+
+后续用户明确要求直接推进，已合并PR44/45、覆盖安装并公开Preview4，9项匿名完整下载哈希通过；当前收尾文档将统一入口和公开总方案。既有授权范围不变时不重复索权，测试与风险披露不省略。
+
 ## 第一轮：可靠交付
 
 - [x] 全部未完成任务保留；仅裁剪终态历史。主快照损坏可恢复备份，但恢复任务先核对，不自动重放。主备皆坏时保留原字节并显示恢复提示，不阻断播放。实现：95db356、de15d41；候选验证：bscosh。
@@ -10,7 +21,7 @@
 - [x] Node24基线与CI审计服务错误分类；生产/全部依赖审计clean，源码/历史安全扫描无发现。修补fast-uri 3.1.6和xmldom 0.8.15/0.9.12；实际候选生产ASAR中的xmldom为0.8.15。
 - [x] 补齐真实空白配置发现的首启安装缺陷：ZIP archivePath与安装path分开、工具包不虚构模型资产。两项红测→10项通过；已有固定哈希真实下载文件在禁网隔离目录安装成功。实现：5c1acd0。
 - [x] 生成并实际解包核对新的未签名安装/便携候选；两者应用字节相同，154项打包源文件逐一匹配。
-- [ ] 桌面覆盖安装与公开Preview4发布：尚未执行。三异源终审路线不齐，本次Claude只读复核8分钟超时无报告，不能算审查通过；等待用户选择继续候选等待或本轮豁免。现有桌面和Preview3不改。
+- [x] 桌面覆盖安装与公开Preview4发布：已安装并公开，9项匿名完整下载哈希通过，见[发布回执](RELEASE_0.9.1_PREVIEW4.md)；已知首次组件/外部启动限制保留，不冒充完全无缺陷。
 
 ## 第二轮：理解与使用
 
@@ -28,13 +39,13 @@
 
 ## 回归及候选身份
 
-公开代码PR：[44](https://github.com/wg5759/AgentPlay/pull/44)。业务源码b02fc9aa5e；对应[双平台CI](https://github.com/wg5759/AgentPlay/actions/runs/33956689934)通过，默认分支尚未包含本批修复，安全告警需合并后再验。
+公开代码PR：[44](https://github.com/wg5759/AgentPlay/pull/44)和[45](https://github.com/wg5759/AgentPlay/pull/45)均已合并；发布标签ded8d64业务源码与b02fc9aa5e一致。主线双平台CI通过，Dependabot开放告警已回读为0。
 
 本地完整回归：1055项，1053通过、0失败、0取消、2跳过，755077.8903ms。两个跳过是archive.org公开目录联网超时，不是播放器或任务测试跳过。发布/签名渠道/SBOM另18项通过。
 
 候选ASAR SHA-256：6984572CA88DA486FA1EBAC8AA8142063BD23AEEFDECEFE3BC0932F01F0319C8。
 标准安装包SHA-256：F968019C6BE6DFBDBC02FD5B57BE2A1ECE3A7835B744B00CF5960290A4523720。
 便携包SHA-256：73696C082AB05F4269C2B1A5E7A448E2E3D65FEC015C94B67AF50E93CF2FD18B。
-安装包和应用均NotSigned；209包/292关系SPDX已生成。只生成候选，没有创建tag、Release或上传安装包。
+安装包和应用均NotSigned；209包/292关系SPDX随Preview4公开。候选哈希已同时在真实安装、两种包内载荷及9项匿名下载验收中核对。
 
 维护者证据：release/reliability-final-full-tests-20260905.log；release/reliability-acceptance-{CGSVsg,u28bJM,bscosh,qcNxUH}/receipt.json；release/intent-real-eval-CPnxRr/receipt.json；release/concat-profile-20260905.log；release/window-recovery-candidate-20260905.json；release/inline-ui-GTtTmB/receipt.json（最终候选14项矩阵）。健康Git交付副本的release/preview4-rc3/payload-verified-MJA0rK/receipt.json记录两包实际解包与154项源码哈希；候选资产在release/preview4-candidate-assets。证据目录不随公开源码分发，未发布回执不伪造公开链接。

@@ -4,7 +4,7 @@
 
 ## 1. 下载当前公开预览版
 
-当前测试入口是 [0.9.1 Preview 3](https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.3)。它尚未取得 Authenticode 签名（NotSigned），适合愿意核对文件来源和SHA-256的测试者。历史稳定版标签0.7.6也未签名，只作历史与回滚入口，不是本指南推荐的测试版本。
+当前测试入口是 [0.9.1 Preview 4](https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.4)。它尚未取得 Authenticode 签名（NotSigned），适合愿意核对文件来源和SHA-256的测试者。历史稳定版标签0.7.6也未签名，只作历史与回滚入口，不是本指南推荐的测试版本。
 
 从同一个官方发布页选择一个包即可：
 
@@ -30,7 +30,7 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.\AgentPlay-0.9.1-Windows-x64-Stand
 
 这个任务不需要API Key，也不需要先下载大语言模型。部分格式仍需要网络获取解码组件或准备本地缓存；等待期间原文件不会被替换。若黑屏、比例不对、无法退出或组件报错，停在这里反馈，不要反复提交同一任务。
 
-公开Preview 3与未发布候选必须区分：首启组件及后续窗口/字幕加固正在[PR #44](https://github.com/wg5759/AgentPlay/pull/44)中；只有新版本正式出现在Releases后才按该发布页更新，不把源码分支或候选包当成已公开的Preview 4。
+Preview 4已公开并包含[PR #44](https://github.com/wg5759/AgentPlay/pull/44)的任务、窗口、字幕与组件安装修复。首次组件下载及快速连续外部打开仍有超时观察，详见发布页；已通过的安装态格式验收使用完整FFmpeg组件与应用内打开。
 
 ## 3. 需要AI时再连接模型
 

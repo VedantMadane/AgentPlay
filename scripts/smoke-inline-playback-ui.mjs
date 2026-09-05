@@ -2,15 +2,30 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
+import { connectCdp } from './lib/reliability-cdp.mjs'
 const arg = key => process.argv.find(a => a.startsWith(`--${key}=`))?.slice(key.length + 3)
 const exe = arg('exe'), matrix = arg('matrix'), original = arg('original')
 assert.ok(exe && matrix && original)
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'agentplay-inline-ui-'))
+const suppliedFfmpeg = arg('ffmpeg-dir')
+if (suppliedFfmpeg) {
+  const pinned = (await import('../electron/ytdlp-pack-manifest.js')).default.assets.find(asset => asset.kind === 'zip')
+  for (const file of pinned.files) {
+    const input = path.join(suppliedFfmpeg, 'bin', path.basename(file.path))
+    assert.equal(fs.statSync(input).size, file.size)
+    assert.equal(crypto.createHash('sha256').update(fs.readFileSync(input)).digest('hex'), file.sha256)
+  }
+  fs.mkdirSync(path.join(profile, 'yt-dlp'), { recursive: true })
+  fs.symlinkSync(path.resolve(suppliedFfmpeg), path.join(profile, 'yt-dlp', 'ffmpeg-8.0.1-essentials_build'), 'junction')
+}
 const evidence = fs.mkdtempSync(path.join(path.resolve('release'), 'inline-ui-'))
 const port = 19441
+const inAppOpen = process.argv.includes('--in-app-open')
+let mainInspector
 // A real visible UI is essential: Chromium pauses occluded silent videos.
-const launch = file => spawn(exe, [`--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, '--disable-backgrounding-occluded-windows', '--disable-features=CalculateNativeWinOcclusion', file], { windowsHide: false, stdio: 'ignore' })
+const launch = file => spawn(exe, [`--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, ...(inAppOpen ? ['--inspect=19442'] : []), '--disable-backgrounding-occluded-windows', '--disable-features=CalculateNativeWinOcclusion', file], { windowsHide: false, stdio: 'ignore' })
 const child = launch(original)
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 let ws, id = 0
@@ -24,16 +39,16 @@ async function evaluate(expression, awaitPromise = false) {
   return r.result?.value
 }
 async function state() {
-  return evaluate(`(() => {
+  return evaluate(`(async () => {
     const media = document.querySelector('[data-ai-player-video], [data-ai-player-audio]');
     const persisted = JSON.parse(localStorage.getItem('ai-player-store') || '{}').state;
     return { present: !!media, src: media?.currentSrc, currentTime: media?.currentTime, duration: media?.duration,
       readyState: media?.readyState, paused: media?.paused, error: media?.error?.message || null,
       visibility: document.visibilityState, recovery: document.querySelector('[data-playback-recovery]')?.innerText,
       width: media?.videoWidth, height: media?.videoHeight, fit: media && getComputedStyle(media).objectFit,
-      frames: media?.getVideoPlaybackQuality?.().totalVideoFrames, audioBytes: media?.webkitAudioDecodedByteCount, history: persisted?.recentMedia?.[0], full: window.__testFullscreen || false,
+      frames: media?.getVideoPlaybackQuality?.().totalVideoFrames, audioBytes: media?.webkitAudioDecodedByteCount, history: persisted?.recentMedia?.[0], full: await window.aiPlayer.windowControls.isFullscreen(), eventFullscreen: window.__testFullscreen || false, theater: !!document.querySelector('.workspace-theater'),
       playTitle: document.querySelector('.player-video-controls button[title]')?.title };
-  })()`)
+  })()`, true)
 }
 async function waitFor(test, label, timeout = 120000) {
   const end = Date.now() + timeout
@@ -45,7 +60,7 @@ async function toggle() { await evaluate(`window.dispatchEvent(new CustomEvent('
 try {
   let page
   for (let i = 0; i < 240; i++) {
-    try { page = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(p => p.type === 'page'); if (page?.webSocketDebuggerUrl) break } catch {}
+    try { page = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(p => p.type === 'page' && p.url.startsWith('file:')); if (page?.webSocketDebuggerUrl) break } catch {}
     await sleep(250)
   }
   assert.ok(page?.webSocketDebuggerUrl)
@@ -57,16 +72,31 @@ try {
   // Keep the test page active while the user works in another foreground app.
   // This changes CDP test focus only, never the production playback policy.
   await command('Emulation.setFocusEmulationEnabled', { enabled: true })
+  let bridgeReady = false
+  for (let attempt = 0; attempt < 300; attempt++) {
+    try { bridgeReady = await evaluate('Boolean(window.aiPlayer?.windowControls)'); if (bridgeReady) break } catch { /* navigation can replace the initial execution context */ }
+    await sleep(100)
+  }
+  assert.ok(bridgeReady, 'desktop preload must be ready before attaching test listeners')
   await evaluate(`window.aiPlayer.windowControls.onFullscreenChanged(v => window.__testFullscreen = v)`)
   const sources = [original, ...['mpeg4.mp4', 'mpeg4.avi', 'wmv.wmv', 'mpeg2.ts', 'ffv1.mkv', 'prores.mov', 'h264.mp4', 'h264-ac3.mkv', 'audio.wma', 'audio.aiff', 'audio.ac3', 'audio.flac', 'audio.opus'].map(n => path.join(matrix, n))]
+  if (inAppOpen) {
+    mainInspector = await connectCdp(19442, 'node')
+    await mainInspector.evaluate(`(() => {const e=process.getBuiltinModule('module').createRequire(process.execPath)('electron');e.dialog.showOpenDialog=async()=>({canceled:false,filePaths:${JSON.stringify(sources)}});return true})()`)
+    const selected = await evaluate('window.aiPlayer.chat.openAny()', true)
+    assert.equal(selected.media.length, sources.length, 'native file selection authorizes exactly the matrix')
+  }
   for (let index = 0; index < sources.length; index++) {
     const source = sources[index]
     if (index) {
+      if (inAppOpen) await evaluate(`window.aiPlayer.player.loadFile(${JSON.stringify(source)})`, true)
+      else {
       const forwarded = launch(source)
       await new Promise((resolve, reject) => {
         const timer = setTimeout(() => { forwarded.kill(); reject(new Error('Forwarded instance did not exit')) }, 15000)
         forwarded.once('exit', code => { clearTimeout(timer); code === 0 ? resolve() : reject(new Error(`Forwarded instance exit ${code}`)) })
       })
+      }
       await sleep(100)
     }
     const loaded = await waitFor(s => s.present && s.readyState >= 2 && s.duration > 0 && !s.error && s.history?.src === source, `load ${source}`)
@@ -102,7 +132,7 @@ try {
       assert.equal(await evaluate(`document.querySelector('[data-ai-player-video]') === window.__mediaBeforeFullscreen`), true, 'fullscreen must preserve the playing media element')
       await command('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
       await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
-      await waitFor(s => !s.full, 'escape fullscreen', 5000)
+      await waitFor(s => !s.full && !s.theater, 'escape fullscreen', 5000)
       assert.equal(await evaluate(`document.querySelector('[data-ai-player-video]') === window.__mediaBeforeFullscreen`), true, 'ESC must preserve the playing media element')
       await waitFor(s => s.readyState >= 2 && !s.recovery && s.currentTime >= target + 2.5, 'continue after fullscreen', 10000)
       const shot = await command('Page.captureScreenshot', { format: 'png' })
@@ -119,9 +149,13 @@ try {
   const processes = mpvWindows.stdout.trim() ? [JSON.parse(mpvWindows.stdout)].flat() : []
   const own = processes.filter(p => p.Path?.toLowerCase() === path.join(path.dirname(exe), 'resources/bin/win/mpv.exe').toLowerCase())
   assert.ok(own.every(p => p.MainWindowHandle === 0), 'No separate mpv window may exist')
-  fs.writeFileSync(path.join(evidence, 'receipt.json'), JSON.stringify({ executable: exe, profile, passed: receipts.length, noExternalMpvWindows: true, rapidCancellationPassed: true, receipts }, null, 2))
+  fs.writeFileSync(path.join(evidence, 'receipt.json'), JSON.stringify({ executable: exe, profile, openMode: inAppOpen ? 'native-selection-and-in-app-open' : 'external-second-instance', componentMode: suppliedFfmpeg ? 'preinstalled-hash-verified-ffmpeg' : 'fresh-profile-auto-download', passed: receipts.length, noExternalMpvWindows: true, rapidCancellationPassed: true, receipts }, null, 2))
   console.log(JSON.stringify({ passed: receipts.length, evidence }))
+} catch (error) {
+  fs.writeFileSync(path.join(evidence, 'failed-receipt.json'), JSON.stringify({executable:exe,profile,openMode:inAppOpen?'native-selection-and-in-app-open':'external-second-instance',passed:receipts.length,failure:error.message,receipts},null,2))
+  throw error
 } finally {
+  mainInspector?.close()
   ws?.close()
   if (child.exitCode === null) {
     child.kill()
