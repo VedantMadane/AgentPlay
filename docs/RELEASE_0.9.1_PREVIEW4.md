@@ -5,7 +5,7 @@
 ## 已完成
 
 - PR44合并1b92c03，PR45合并ded8d64；发布标签绑定ded8d64543c437e3a1f69240f2f65670cf43f361。实际应用业务源码与构建基线b02fc9a无差异。
-- [主线Source Quality Gate](https://github.com/wg5759/AgentPlay/actions/runs/33968794457)与[Pages](https://github.com/wg5759/AgentPlay/actions/runs/33968793856)通过；合并后开放Dependabot告警核验为0。
+- 发布提交ded8d64及文档PR46合并后的[主线Source Quality Gate](https://github.com/wg5759/AgentPlay/actions/runs/33985313077)、[Pages](https://github.com/wg5759/AgentPlay/actions/runs/33985312609)通过；公开官网已实际回读到Preview4下载目标。开放Dependabot告警核验为0。
 - 由同一标准安装器覆盖原桌面安装，386个旧安装文件逐一备份核哈希；桌面快捷方式仍指向原安装位置，模型配置哈希未变。
 - 安装态原生窗口结束/关闭/重开、常驻退出、字幕修改/撤销、区间剪辑、合成文档云端只读问答与损坏任务存储下继续播放通过。
 - 安装态14项音视频矩阵在完整且固定SHA验证的FFmpeg组件、原生选择授权与应用内打开条件下通过；以原生isFullscreen与影院布局回读验ESC，而不是只看测试事件变量。
