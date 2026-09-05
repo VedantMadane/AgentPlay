@@ -4,7 +4,7 @@
 
 ## 1. Choose the current public preview
 
-Start with [0.9.1 Preview 3](https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.3), an unsigned prerelease (NotSigned) for early testers. The historical stable tag 0.7.6 is also unsigned; it is a rollback reference, not this guide's recommended test build.
+Start with [0.9.1 Preview 4](https://github.com/wg5759/AgentPlay/releases/tag/v0.9.1-preview.4), an unsigned prerelease (NotSigned) for early testers. The historical stable tag 0.7.6 is also unsigned; it is a rollback reference, not this guide's recommended test build.
 
 Choose one asset from that official release:
 
@@ -30,7 +30,7 @@ This is a small workflow, not a speed guarantee; download, installation and firs
 
 No cloud model, API key or language-model download is needed for this task. Some formats need a decoder-component download or a local compatibility cache; the original stays unchanged. If playback, proportions, fullscreen exit or component installation fails, stop and report the step rather than resubmitting repeatedly.
 
-Public Preview 3 is not the unpublished candidate: further startup-component, window and subtitle fixes are in [PR #44](https://github.com/wg5759/AgentPlay/pull/44). Update only when the new release is actually available; a source branch is not a public Preview 4 installer.
+Preview 4 includes the task, window, subtitle and component-installation fixes from [PR #44](https://github.com/wg5759/AgentPlay/pull/44). First component downloads and rapid repeated external opens can still time out; see the release notes. The passing installed format tests used complete FFmpeg components and in-app file opening.
 
 ## 3. Connect AI only when you need it
 
